@@ -57,6 +57,8 @@
 #  Defaults to false
 #
 class designate::api (
+  $api_host                   = '127.0.0.1',
+  $api_base_uri               = 'http://127.0.0.1:9001/',
   $package_ensure             = present,
   $api_package_name           = undef,
   $enabled                    = true,
@@ -70,6 +72,7 @@ class designate::api (
   $keystone_password          = false,
   $enable_api_v1              = true,
   $enable_api_v2              = false,
+  $enable_api_admin           = false,
 ){
   include ::designate::params
 
@@ -91,9 +94,12 @@ class designate::api (
 
   # API Service
   designate_config {
+    'service:api/api_host'                  : value => $api_host;
+    'service:api/api_base_uri'              : value => $api_base_uri;
     'service:api/auth_strategy'             : value => $auth_strategy;
     'service:api/enable_api_v1'             : value => $enable_api_v1;
     'service:api/enable_api_v2'             : value => $enable_api_v2;
+    'service:api/enable_api_admin'          : value => $enable_api_admin;
   }
 
   # Keystone Middleware
