@@ -61,7 +61,24 @@
 #   (optional) Notification Topics
 #   Defaults to 'notifications'
 #
-
+# [*kombu_ssl_ca_certs*]
+#   (optional) SSL certification authority file (valid only if SSL enabled).
+#   Defaults to undef
+#
+# [*kombu_ssl_certfile*]
+#   (optional) SSL cert file (valid only if SSL enabled).
+#   Defaults to undef
+#
+# [*kombu_ssl_keyfile*]
+#   (optional) SSL key file (valid only if SSL enabled).
+#   Defaults to undef
+#
+# [*kombu_ssl_version*]
+#   (optional) SSL version to use (valid only if SSL enabled).
+#   Valid values are TLSv1, SSLv23 and SSLv3. SSLv2 may be
+#   available on some distributions.
+#   Defaults to 'TLSv1'
+#
 class designate(
   $package_ensure       = present,
   $common_package_name  = undef,
@@ -76,6 +93,11 @@ class designate(
   $rabbit_virtualhost   = '/',
   $notification_driver  = 'messaging',
   $notification_topics  = 'notifications',
+  $rabbit_use_ssl       = false,
+  $kombu_ssl_ca_certs   = undef,
+  $kombu_ssl_certfile   = undef,
+  $kombu_ssl_keyfile    = undef,
+  $kombu_ssl_version    = 'TLSv1',
 ) {
 
   include ::designate::params
@@ -83,6 +105,19 @@ class designate(
     ensure => $package_ensure,
     name   => pick($common_package_name, $::designate::params::common_package_name),
     tag    => ['openstack', 'designate-package'],
+  }
+
+  if $kombu_ssl_ca_certs and !$rabbit_use_ssl {
+    fail('The kombu_ssl_ca_certs parameter requires rabbit_use_ssl to be set to true')
+  }
+  if $kombu_ssl_certfile and !$rabbit_use_ssl {
+    fail('The kombu_ssl_certfile parameter requires rabbit_use_ssl to be set to true')
+  }
+  if $kombu_ssl_keyfile and !$rabbit_use_ssl {
+    fail('The kombu_ssl_keyfile parameter requires rabbit_use_ssl to be set to true')
+  }
+  if ($kombu_ssl_certfile and !$kombu_ssl_keyfile) or ($kombu_ssl_keyfile and !$kombu_ssl_certfile) {
+    fail('The kombu_ssl_certfile and kombu_ssl_keyfile parameters must be used together')
   }
 
   if $package_ensure != 'absent' {
@@ -127,6 +162,43 @@ class designate(
     designate_config { 'DEFAULT/rabbit_port':      value => $rabbit_port }
     designate_config { 'DEFAULT/rabbit_hosts':     value => "${rabbit_host}:${rabbit_port}" }
     designate_config { 'DEFAULT/rabbit_ha_queues': value => false }
+  }
+
+  designate_config { 'DEFAULT/rabbit_use_ssl': value => $rabbit_use_ssl }
+
+  if $rabbit_use_ssl {
+
+    if $kombu_ssl_ca_certs {
+      designate_config { 'DEFAULT/kombu_ssl_ca_certs': value => $kombu_ssl_ca_certs; }
+    } else {
+      designate_config { 'DEFAULT/kombu_ssl_ca_certs': ensure => absent; }
+    }
+
+    if $kombu_ssl_certfile or $kombu_ssl_keyfile {
+      designate_config {
+        'DEFAULT/kombu_ssl_certfile': value => $kombu_ssl_certfile;
+        'DEFAULT/kombu_ssl_keyfile':  value => $kombu_ssl_keyfile;
+      }
+    } else {
+      designate_config {
+        'DEFAULT/kombu_ssl_certfile': ensure => absent;
+        'DEFAULT/kombu_ssl_keyfile':  ensure => absent;
+      }
+    }
+
+    if $kombu_ssl_version {
+      designate_config { 'DEFAULT/kombu_ssl_version':  value => $kombu_ssl_version; }
+    } else {
+      designate_config { 'DEFAULT/kombu_ssl_version':  ensure => absent; }
+    }
+
+  } else {
+    designate_config {
+      'DEFAULT/kombu_ssl_ca_certs': ensure => absent;
+      'DEFAULT/kombu_ssl_certfile': ensure => absent;
+      'DEFAULT/kombu_ssl_keyfile':  ensure => absent;
+      'DEFAULT/kombu_ssl_version':  ensure => absent;
+    }
   }
 
   # default setting
