@@ -36,6 +36,7 @@ describe 'designate::api' do
         is_expected.to contain_designate_config('service:api/enable_api_v1').with_value(true)
         is_expected.to contain_designate_config('service:api/api_host').with_value('0.0.0.0')
         is_expected.to contain_designate_config('service:api/api_port').with_value('9001')
+        is_expected.to contain_designate_config('service:api/api_base_uri').with_value('http://127.0.0.1:9001/')
         is_expected.to contain_designate_config('keystone_authtoken/auth_host').with_value('10.0.0.42')
         is_expected.to contain_designate_config('keystone_authtoken/auth_port').with_value('35357')
         is_expected.to contain_designate_config('keystone_authtoken/auth_protocol').with_value('https')

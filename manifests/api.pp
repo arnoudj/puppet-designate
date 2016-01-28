@@ -61,6 +61,10 @@
 #  (optional) Enable Designate API Version 2 (experimental)
 #  Defaults to false
 #
+# [*enable_api_admin*]
+#  (optional) Enable Designate Admin API
+#  Defaults to false.
+#
 # [*api_host*]
 #  (optional) Address to bind the API server
 #  Defaults to '0.0.0.0'
@@ -68,6 +72,10 @@
 # [*api_port*]
 #  (optional) Port the bind the API server to
 #  Defaults to '9001'
+#
+# [*api_base_uri*]
+#  Set the base URI of the Designate API service.
+#  Defaults to http://127.0.0.1:9001/.
 #
 class designate::api (
   $package_ensure             = present,
@@ -84,8 +92,10 @@ class designate::api (
   $keystone_memcached_servers = false,
   $enable_api_v1              = true,
   $enable_api_v2              = false,
+  $enable_api_admin           = false,
   $api_host                   = '0.0.0.0',
   $api_port                   = '9001',
+  $api_base_uri               = 'http://127.0.0.1:9001/',
 ) inherits designate {
 
   # API Service
@@ -95,6 +105,8 @@ class designate::api (
     'service:api/auth_strategy'             : value => $auth_strategy;
     'service:api/enable_api_v1'             : value => $enable_api_v1;
     'service:api/enable_api_v2'             : value => $enable_api_v2;
+    'service:api/enable_api_admin'          : value => $enable_api_admin;
+    'service:api/api_base_uri'              : value => $api_base_uri;
   }
 
   # Keystone Middleware
