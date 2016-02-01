@@ -39,6 +39,21 @@ describe 'designate' do
     }
   end
 
+  let :rabbit_rabbit_use_ssl do
+    {
+      :rabbit_host           => '127.0.0.1',
+      :rabbit_port           => 5672,
+      :rabbit_userid         => 'guest',
+      :rabbit_password       => '',
+      :rabbit_virtual_host   => '/',
+      :kombu_ssl_ca_certs    => 'cert goes here',
+      :kombu_ssl_certfile    => 'cert goes here',
+      :kombu_ssl_keyfile     => 'cert goes here',
+      :kombu_ssl_version     => 'TLSv1',
+      :kombu_reconnect_delay => '1.0',
+    }
+  end
+
   shared_examples_for 'designate' do
 
     context 'with rabbit_host parameter' do
@@ -157,6 +172,24 @@ describe 'designate' do
     it { is_expected.to contain_designate_config('oslo_messaging_rabbit/rabbit_hosts').with_value( '10.0.0.1:5672,10.0.0.2:5672,10.0.0.3:5672' ) }
     it { is_expected.to contain_designate_config('oslo_messaging_rabbit/rabbit_port').with_ensure( 'absent' ) }
     it { is_expected.to contain_designate_config('oslo_messaging_rabbit/rabbit_ha_queues').with_value( 'true' ) }
+
+  end
+
+  shared_examples_for 'rabbit with SSL support' do
+    before { params.merge!( rabbit_use_ssl ) }
+
+    it 'configures rabbit' do
+      is_expected.to contain_designate_config('oslo_messaging_rabbit/rabbit_userid').with_value( params[:rabbit_userid] )
+      is_expected.to contain_designate_config('oslo_messaging_rabbit/rabbit_password').with_value( params[:rabbit_password] )
+      is_expected.to contain_designate_config('oslo_messaging_rabbit/rabbit_password').with_value( params[:rabbit_password] ).with_secret(true)
+      is_expected.to contain_designate_config('oslo_messaging_rabbit/rabbit_virtual_host').with_value( params[:rabbit_virtual_host] )
+    end
+
+    it { is_expected.to contain_designate_config('oslo_messaging_rabbit/kombu_ssl_ca_certs').with_value( params[:kombu_ssl_ca_certs] ) }
+    it { is_expected.to contain_designate_config('oslo_messaging_rabbit/kombu_ssl_certfile').with_value( params[:kombu_ssl_certfile] ) }
+    it { is_expected.to contain_designate_config('oslo_messaging_rabbit/kombu_ssl_keyfile').with_value( params[:kombu_ssl_keyfile] ) }
+    it { is_expected.to contain_designate_config('oslo_messaging_rabbit/kombu_ssl_version').with_value( params[:kombu_ssl_version] ) }
+    it { is_expected.to contain_designate_config('oslo_messaging_rabbit/kombu_reconnect_delay').with_value( params[:kombu_reconnect_delay] ) }
 
   end
 
