@@ -17,7 +17,7 @@ describe 'designate::generic_service' do
     end
 
     let :facts do
-      { :osfamily => 'Debian' }
+      { :osfamily => 'Debian' }.merge!(OSDefaults.get_facts())
     end
 
     let :title do
